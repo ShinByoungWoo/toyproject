@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+
+    <title>리스트 페이지 (ツ)_/¯ </title>
+    <style>
+
+
+        #search-box {
+            margin-left: 100px;
+        }
+
+        #show_movie {
+            width: 1500px;
+            margin: 30px auto;
+        }
+
+
+        .url_input_box {
+            width: 1000px;
+            margin: 30px auto;
+            border-top: 1px solid black;
+            border-bottom: 2px solid black;
+            padding: 10px;
+
+        }
+
+        .url_input {
+            font-size: 20px;
+        }
+
+        .url_btn {
+            font-size: 20px;
+
+        }
+
+        .review_btn {
+            width: 195px;
+            margin-top: 3px;
+        }
+
+        .btns {
+            display: block;
+            margin-left: 31.5px;
+        }
+
+        .list_movie {
+            margin: 10px;
+        }
+
+        .card {
+            width: 300px;
+        }
+
+    </style>
+    <script>
+        // 자동 새로 고침
+        $(document).ready(function () {
+
+            showMovie()
+
+            // 검색창에 change, keyup, paste 이벤트 발생시 ajax를 통해 검색을 합니다.
+            $("#search-box").on("change keyup paste", function () {
+
+                let searchData = $(this).val();
+
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/api/search?searchData=' + searchData,
+                    data: {},
+                    success: function (res) {
+
+                        let data = res['result'];
+
+                        $('#show_movie').empty();
+
+                        for (let item in data) {
+                            const row = data[item];
+
+                            let desc = row['desc'];
+                            let image = row['image'];
+                            let like = row['like'];
+                            let title = row['title'];
+                            let hate = row['hate'];
+
+
+                            let temp_html = `<div class="col list_movie">
+                                            <div class="card h-100">
+                                              <img src="${image}" class="card-img-top" alt="${title}">
+                                              <div class="card-body">
+                                                <h5 class="card-title">${title}</h5>
+                                                <p class="card-text">${desc}</p>
+                                                <div class="btns">
+                                                <button onclick="like_movie('${title}')" class="btn btn-primary"> 좋아요 : ${like}</button>
+                                                <button onclick="hate_movie('${title}')" class="btn btn-danger"> 싫어요 : ${hate} </button>
+                                                <button class="btn btn-light review_btn"> 후기 쓰러 가기 </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>`
+
+                            $('#show_movie').append(temp_html);
+                        }
+                    }
+                });
+
+            });
+
+        });
+
+
+        // URL 입력하여 업로드 된 영화 목록을 보여 주는 함수
+        function showMovie() {
+            $.ajax({
+                type: 'GET',
+                url: '/api/list',
+                data: {},
+                success: function (response) {
+                    let rows = response['all_star']
+                    for (let i = 0; i < rows.length; i++) {
+                        let title = rows[i]['title']
+                        let image = rows[i]['image']
+                        let like = rows[i]['like']
+                        let desc = rows[i]['desc']
+                        let hate = rows[i]['hate']
+
+                        let temp_html = `<div class="col list_movie">
+                                            <div class="card h-100">
+                                              <img src="${image}" class="card-img-top" alt="${title}">
+                                              <div class="card-body">
+                                                <h5 class="card-title">${title}</h5>
+                                                <p class="card-text">${desc}</p>
+                                                <div class="btns">
+                                                <button onclick="like_movie('${title}')" class="btn btn-primary"> 좋아요 : ${like}</button>
+                                                <button onclick="hate_movie('${title}')" class="btn btn-danger"> 싫어요 : ${hate} </button>
+                                                <button class="btn btn-light review_btn"> 후기 쓰러 가기 </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>`
+                        $('#show_movie').append(temp_html)
+                    }
+                }
+            })
+        }
+
+        // 좋아요 버튼 누르면 실행되는 함수. 결과 : 좋아요 + 1
+        function like_movie(title) {
+            $.ajax({
+                type: 'POST',
+                url: '/api/like',
+                data: {'title_give': title},
+                success: function (response) {
+                    console.log(response)
+                    alert(response['msg']);
+                    window.location.reload();
+                }
+            });
+        }
+
+        // 싫어요 버튼 클릭시 실행되는 함수입니다. 결과 : 싫어요 + 1
+        function hate_movie(title) {
+            $.ajax({
+                type: 'POST',
+                url: '/api/hate',
+                data: {'title_give': title},
+                success: function (res) {
+                    console.log(res)
+                    alert(res['msg']);
+                    window.location.reload();
+                }
+            });
+        }
+
+
+        // 사이트 윗부분 URL 입력 창에 영화 사이트(네이버 기준)을 넣을 수 있는 함수.
+        function upload_movie() {
+
+            let url = $('#url_upload').val()
+
+            if (url.indexOf('naver') === -1) {
+                alert('네이버 영화 링크만 가능합니다.');
+                $('#url_upload').val('');
+                return false;
+            }
+
+            let url_code = url.substring(url.length - 6, url.length);
+
+            $.ajax({
+                type: "POST",
+                url: "/api/code",
+                data: {'code_give': url_code},
+                success: function (res) { // 성공하면
+                    let get_code = res["current_code"];
+                    console.log(url_code);
+                    console.log(get_code);
+                    console.log(url_code === get_code);
+
+
+                    if (url_code === get_code) {
+
+                        $.ajax({
+                            type: "POST",
+                            url: "/api/overlap",
+                            data: {'code_give': url_code},
+                            success: function (res) { // 성공하면
+                                alert(res["msg"]);
+                                window.location.reload();
+                            }
+                        });
+
+                    } else {
+
+                        $.ajax({
+                            type: "POST",
+                            url: "/api/list",
+                            data: {'url_give': url},
+                            success: function (response) { // 성공하면
+                                alert(response["msg"]);
+                                window.location.reload();
+                            }
+                        });
+                    }
+                }
+            });
+
+
+        }
+
+
+    </script>
+</head>
+<body>
+    <div class="url_input_box input-group mb-3">
+        <input type="text" placeholder="URL을 입력해주세요" id="url_upload" class="form-control url_input" id="basic-url"
+               aria-describedby="basic-addon3">
+        <button onclick="upload_movie()" class="btn btn-primary url_btn">업로드</button>
+
+        <input type="text" placeholder="영화제목" id="search-box" class="form-control url_input"
+               aria-describedby="basic-addon3">
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="show_movie">
+
+    </div>
+
+
+</body>
+</html>
